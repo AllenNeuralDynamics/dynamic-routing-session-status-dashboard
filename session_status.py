@@ -14,6 +14,7 @@ def get_sessions_table() -> pn.widgets.Tabulator:
     yield pn.indicators.LoadingSpinner(value=True, size=20, name='Fetching data from S3...')
     df = (
         pl.read_parquet('s3://aind-scratch-data/dynamic-routing/status/status.parquet')
+        # created by https://github.com/AllenInstitute/npc_lims/actions/workflows/status.yml
         .with_columns(
             # pl.selectors.starts_with('is_').cast(pl.Boolean),
             subject_id=pl.col('session_id').str.split('_').list.get(1),
