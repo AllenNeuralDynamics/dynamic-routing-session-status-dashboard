@@ -1,0 +1,11 @@
+[project]
+name = "dynamicrouting-status-dashboard"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10,<3.12"
+dependencies = [
+    "npc-lims>=0.1.187",
+    "panel>=1.6.1",
+    "polars[pandas]>=1.25.2",
+]
