@@ -9,6 +9,15 @@ import polars as pl
 pn.config.theme = 'dark'
 pn.extension('tabulator')
 
+def content_fn(row: dict[str, str]) -> pn.pane.Str:
+    session_id = '_'.join(row['session_id'].split('_')[1:3])
+    info = dataclasses.asdict(npc_lims.get_session_info(session_id))
+    return pn.pane.JSON(
+        object=json.dumps(info, indent=4, default=str),
+        styles={'font-size': '12pt'},
+        sizing_mode='stretch_width',
+    )
+
 def get_sessions_table() -> pn.widgets.Tabulator:
     """Get sessions for a specific subject and date range."""
     yield pn.indicators.LoadingSpinner(value=True, size=20, name='Fetching data from S3...')
@@ -20,15 +29,6 @@ def get_sessions_table() -> pn.widgets.Tabulator:
             subject_id=pl.col('session_id').str.split('_').list.get(1),
         )
     )
-    def content_fn(row) -> pn.pane.Str:
-        info = dataclasses.asdict(npc_lims.get_session_info('_'.join(row['session_id'].split('_')[1:3])))
-        print(info)
-        return pn.pane.JSON(
-            object=json.dumps(info, indent=4, default=str),
-            styles={'font-size': '12pt'},
-            sizing_mode='stretch_width',
-        )
-   
     stylesheet = """
     .tabulator-cell {
         font-size: 12px;
@@ -73,12 +73,17 @@ def get_sessions_table() -> pn.widgets.Tabulator:
     # table.on_click(callback)
     yield table
 
+def clear_session_info_cache() -> None:
+    npc_lims.tracked_sessions._get_session_info_from_file.cache_clear()
+
+# make button to clear cache 
+clear_cache_button = pn.widgets.Button(name='Clear cached info', button_type='warning')
     
 bound_get_session_df = pn.bind(get_sessions_table)
 pn.template.MaterialTemplate(
     site="DR dashboard",
     title=pathlib.Path(__file__).stem.replace('_', ' ').lower(),
     # sidebar=[sidebar],
-    main=[bound_get_session_df],
+    main=[bound_get_session_df, clear_cache_button],
     # sidebar_width=width + 30,
 ).servable()
